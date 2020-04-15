@@ -2,14 +2,14 @@ kind: MLApp
 metadata:
   name: tensorflow
 spec:
-  package_manager: "pip{{.python_version.value}}"
+  package_manager: "pip3"
   default_mount_path: "/notebooks"
   packages:
     - names:
       {{- range $i, $value := .packages }}
       - "{{ $value }}"
       {{- end }}
-      manager: "pip{{.python_version.value}}"
+      manager: "pip3"
   tasks:
   - name: standalone
     resources:
@@ -17,16 +17,9 @@ spec:
       replicas: 1
       restartPolicy: Never
       maxRestartCount: 0
-      {{- if eq .python_version.value "3" }}
       images:
         gpu: "kuberlab/tensorflow:gpu-36-{{.tensorflow_version.value}}-full"
         cpu: "kuberlab/tensorflow:cpu-36-{{.tensorflow_version.value}}-full"
-      {{- end }}
-      {{- if eq .python_version.value "2" }}
-      images:
-        gpu: "kuberlab/tensorflow:gpu-27-{{.tensorflow_version.value}}-full"
-        cpu: "kuberlab/tensorflow:cpu-27-{{.tensorflow_version.value}}-full"
-      {{- end }}
       command: python hello-tensorflow.py
       workdir: "$SRC_DIR"
       resources:
@@ -45,16 +38,9 @@ spec:
       replicas: 1
       restartPolicy: Never
       maxRestartCount: 0
-      {{- if eq .python_version.value "3" }}
       images:
         gpu: "kuberlab/tensorflow:gpu-36-{{.tensorflow_version.value}}-full"
         cpu: "kuberlab/tensorflow:cpu-36-{{.tensorflow_version.value}}-full"
-      {{- end }}
-      {{- if eq .python_version.value "2" }}
-      images:
-        gpu: "kuberlab/tensorflow:gpu-27-{{.tensorflow_version.value}}-full"
-        cpu: "kuberlab/tensorflow:cpu-27-{{.tensorflow_version.value}}-full"
-      {{- end }}
       command: "echo \"WORKER: $REPLICA_INDEX\";echo \"PSS: $PS_NODES\"; echo \"WORKERS: $WORKER_NODES\"; echo \"BUILD: $BUILD_ID\"; python hello-tensorflow.py"
       workdir: "$SRC_DIR"
       resources:
@@ -73,16 +59,9 @@ spec:
       restartPolicy: Never
       maxRestartCount: 0
       is_permanent: true
-      {{- if eq .python_version.value "3" }}
       images:
         gpu: "kuberlab/tensorflow:gpu-36-{{.tensorflow_version.value}}-full"
         cpu: "kuberlab/tensorflow:cpu-36-{{.tensorflow_version.value}}-full"
-      {{- end }}
-      {{- if eq .python_version.value "2" }}
-      images:
-        gpu: "kuberlab/tensorflow:gpu-27-{{.tensorflow_version.value}}-full"
-        cpu: "kuberlab/tensorflow:cpu-27-{{.tensorflow_version.value}}-full"
-      {{- end }}
       command: "echo \"PS: $REPLICA_INDEX\";echo \"PSS: $PS_NODES\"; echo \"WORKERS: $WORKER_NODES\"; echo \"BUILD: $BUILD_ID\"; sleep 300"
       workdir: "$SRC_DIR"
       resources:
@@ -100,16 +79,9 @@ spec:
   {{- if .jupyter.value }}
   - name: jupyter
     displayName: Jupyter
-    {{- if eq .python_version.value "3" }}
     images:
       gpu: "kuberlab/tensorflow:gpu-36-{{.tensorflow_version.value}}-full"
       cpu: "kuberlab/tensorflow:cpu-36-{{.tensorflow_version.value}}-full"
-    {{- end }}
-    {{- if eq .python_version.value "2" }}
-    images:
-      gpu: "kuberlab/tensorflow:gpu-27-{{.tensorflow_version.value}}-full"
-      cpu: "kuberlab/tensorflow:cpu-27-{{.tensorflow_version.value}}-full"
-    {{- end }}
     resources:
       requests:
         cpu: 100m
@@ -132,16 +104,9 @@ spec:
     {{- else }}
     command: "tensorboard --logdir=$TRAINING_DIR"
     {{- end }}
-    {{- if eq .python_version.value "3" }}
     images:
       gpu: "kuberlab/tensorflow:gpu-36-{{.tensorflow_version.value}}-full"
       cpu: "kuberlab/tensorflow:cpu-36-{{.tensorflow_version.value}}-full"
-    {{- end }}
-    {{- if eq .python_version.value "2" }}
-    images:
-      gpu: "kuberlab/tensorflow:gpu-27-{{.tensorflow_version.value}}-full"
-      cpu: "kuberlab/tensorflow:cpu-27-{{.tensorflow_version.value}}-full"
-    {{- end }}
     ports:
     - port: 6006
       targetPort: 6006
@@ -160,16 +125,9 @@ spec:
   serving:
   - name: serving
     displayName: Serving
-    {{- if eq .python_version.value "3" }}
     images:
       gpu: "kuberlab/tensorflow:gpu-36-{{.tensorflow_version.value}}-full"
       cpu: "kuberlab/tensorflow:cpu-36-{{.tensorflow_version.value}}-full"
-    {{- end }}
-    {{- if eq .python_version.value "2" }}
-    images:
-      gpu: "kuberlab/tensorflow-serving:gpu-27-1.5.0"
-      cpu: "kuberlab/tensorflow-serving:cpu-27-1.5.0"
-    {{- end }}
     command: "tensorflow_model_server --port={{ .serving_port.value }} --model_name=model --model_base_path=$checkpoint_path"
     resources:
       accelerators:
@@ -187,21 +145,18 @@ spec:
       name: http
     default_volume_mapping: true
   volumes:
-  - isLibDir: false
-    name: training
+  - name: training
     clusterStorage: {{ .storage.value }}
   - gitRepo:
       repository: {{ gitRepo .src.value }}
       accountId: '{{ .src.accountId }}'
       revision: '{{ .src.revision }}'
-    isLibDir: false
     name: src
     subPath: {{ gitSubPath .src.value }}
   - isLibDir: true
     name: lib
     clusterStorage: {{ .storage.value }}
-  - isLibDir: false
-    name: data
+  - name: data
     {{- if .dataset.value }}
     datasetFS:
       workspace: {{ .dataset.workspace }}
@@ -210,8 +165,7 @@ spec:
     {{- else }}
     clusterStorage: {{ .storage.value }}
     {{- end }}
-  - isLibDir: false
-    mountPath: /notebooks
+  - mountPath: /notebooks
     name: code
     subPath: code
     clusterStorage: {{ .storage.value }}
