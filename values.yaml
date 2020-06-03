@@ -5,7 +5,7 @@ storage:
    kind: cluster_storage
 
 tensorflow_version:
-  value: "2.1.0"
+  value: "2.2.0"
   wizard:
     name: "Tensorflow version"
     kind: select
@@ -13,6 +13,7 @@ tensorflow_version:
     - "1.14"
     - "1.15"
     - "2.1.0"
+    - "2.2.0"
 
 jupyter:
   value: true
